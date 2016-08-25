@@ -16,15 +16,91 @@
 #
 import webapp2
 from caesar import encrypt
+import cgi
 
-answer = encrypt("Hello, Zach!", 2)
-print(answer)
-=> prints Jgnnq, Bcej!
+page_header = """
+<!DOCTYPE html>
+<html>
+<head>
+    <title>caesar</title>
+    <style type="text/css">
+        .error {
+            color: blue;
+        }
+    </style>
+</head>
+<body>
+    <h1>
+        <a href="/">caesar</a>
 
-#class MainHandler(webapp2.RequestHandler):
-#    def get(self):
-#        self.response.write('Hello world!')
+    </h1>
+"""
+# html boilerplate for the bottom of every page
+page_footer = """
+</body>
+</html>
+"""
 
-#app = webapp2.WSGIApplication([
-#    ('/', MainHandler)
-#], debug=True)
+
+class Index(webapp2.RequestHandler):
+   def get(self):
+
+        edit_header = "<h3>Caesar</h3>"
+
+        # a form for adding text
+        rot_form = """
+        <form action="/rotate" method="post">
+
+            <label>
+            rotate by
+                <input type="int" name="rotation"/>
+                <br>
+                <textarea input type="text" name="text" style="height: 100px; width: 400px;"></textarea>
+                <br>
+            </label>
+            <input type="submit" value="Submit"/>
+        </form>
+
+        """
+
+        response = page_header + "<p>" + rot_form + "</p>" + page_footer
+        self.response.write(response)
+
+class Rotate(webapp2.RequestHandler):
+#rotates text based user input
+#requests coming into /rotate
+    def post(self):
+        # look inside the request to figure out what the user typed
+        rot_form = self.request.get("text")
+        rot_num = self.request.get("rotation")
+        en = encrypt(str(rot_form), int(rot_num))
+
+        if rot_form != "":
+            error = "You have entered no text. Please enter some text. %s" % (en)
+            error_escaped = cgi.escape(error, quote=True)
+            #self.redirect("/?error= {}".format(error))
+            #self.redirect("/?error=" + error_escaped)
+
+
+#encrypt on new page
+            #self.response.write(en)
+            #self.response.write('''<textarea input type="text" name="text" style="height: 100px; width: 400px;">'''(self.response.write(en))'''</textarea>''')
+            #self.response.write(<p><body><html>(en)</p></body></html>)
+
+#testing encrypt on same page
+
+#escape html
+#escape so html doesnt get translated rot13
+        new_rot_element= "<strong>" + cgi.escape(en) + "</strong>"
+        new_rot2_element= "<strong>" + cgi.escape(rot_form) + "</strong>"
+        #sentence = new_movie_element + " has been added to your Watchlist!"
+        #response = page_header + "<p>" + en + "</p>" + page_footer
+        response = page_header + "<textarea>" + en + "</textarea>" + page_footer
+        self.response.write(response)
+
+
+
+app = webapp2.WSGIApplication([
+    ('/', Index),
+    ('/rotate', Rotate)
+], debug=True)
